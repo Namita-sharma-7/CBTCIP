@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do App</title>
+    <style>
+        :root {
+            --bg-color: #f0f0f5;
+            --text-color: #333;
+            --primary-color: #6200ea;
+            --secondary-color: #03dac6;
+            --accent-color: #9a67ea;
+            --card-bg: #fff;
+            --border-color: #ddd;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar h1 {
+            margin: 0;
+            font-size: 1.5em;
+            color: black;
+        }
+
+        .nav-buttons {
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-button {
+            margin-left: 10px;
+            padding: 10px 20px;
+            background: black;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            color: white;
+            transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
+        }
+
+        .nav-button:hover {
+            background: #0072b1;
+            transform: scale(1.05);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .container {
+            flex: 1;
+            padding: 20px;
+            max-width: 800px;
+            margin: auto;
+            overflow-y: auto;
+        }
+
+        .card {
+            background: var(--card-bg);
+            margin: 10px 0;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: box-shadow 0.3s, transform 0.3s;
+            cursor: pointer;
+        }
+
+        .card:hover {
+            box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
+            transform: scale(1.02);
+        }
+
+        h2 {
+            text-align: center;
+            color: black;
+            margin-bottom: 10px;
+        }
+
+        form {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            width: 70%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            background:#fff;
+            color: inherit;
+            outline: none;
+        }
+
+        button {
+            padding: 10px;
+            border: none;
+            background: black;
+            color: #fff;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
+        }
+
+        button:hover {
+            background: #0072b1;
+            transform: scale(1.05);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            background: var(--card-bg);
+            margin: 10px 0;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .complete-btn, .delete-btn {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
+        }
+
+        .complete-btn {
+            background: black;
+            color: #fff;
+            margin-right: 5px;
+        }
+
+        .complete-btn:hover {
+            background:#0072b1;
+            transform: scale(1.05);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .delete-btn {
+            background: black;
+            color: #fff;
+        }
+
+        .delete-btn:hover {
+            background: #0072b1;
+            transform: scale(1.05);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .timestamp {
+            font-size: 0.8em;
+            color: #999;
+        }
+
+        .completed-task {
+            text-decoration: line-through;
+            color: #777;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0.3s, opacity 0.3s;
+        }
+
+        .modal.active {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            width: 300px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-content input[type="text"] {
+            width: 80%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            background: #f0f0f5;
+            color: inherit;
+        }
+
+        .modal-content button {
+            padding: 10px;
+            border: none;
+            background: var(--primary-color);
+            color: #fff;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
+        }
+
+        .modal-content button:hover {
+            background: var(--accent-color);
+            transform: scale(1.05);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .back-button {
+            padding: 10px 20px;
+            margin-bottom: 10px;
+            background: black;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
+        }
+
+        .back-button:hover {
+            background: #0072b1;
+            transform: scale(1.05);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="navbar">
+            <h1>To-Do App</h1>
+            <div class="nav-buttons">
+<a href="https://www.linkedin.com/in/namita-sharma-88b94130b" target="_blank"><img src="https://cdn-icons-png.flaticon.com/512/174/174857.png" alt="LinkedIn" style="width: 20px; height: 20px;"></a> &nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp; <a href="https://github.com/Namita-sharma-7" target="_blank"><img src="https://cdn-icons-png.flaticon.com/512/25/25231.png" alt="GitHub" style="width: 20px; height: 20px;"></a>&nbsp;&nbsp;&nbsp;&nbsp;
+                <button class="nav-button" onclick="showAllLists()">All Lists</button>
+                <button class="nav-button" onclick="showNewListModal()">New List</button>
+            </div>
+        </div>
+
+        <div id="main-container" class="container">
+            <!-- Lists and tasks will be inserted here -->
+        </div>
+
+        <!-- Modal for creating new list -->
+        <div id="modal" class="modal">
+            <div class="modal-content">
+                <h2 id="modal-title">New List</h2>
+                <input type="text" id="modal-input" placeholder="List Name">
+                <button onclick="createList()">Create</button>
+                <button onclick="closeModal()">Cancel</button>
+            </div>
+        </div>
+
+        
+    </div>
+
+    <script>
+        let allLists = JSON.parse(localStorage.getItem('lists')) || {};
+        let currentList = null;
+
+        function showAllLists() {
+            const listContainer = document.getElementById('main-container');
+            listContainer.innerHTML = '<h2>All Lists</h2>';
+            Object.keys(allLists).forEach(listName => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <h3>${listName}</h3>
+                    <button onclick="switchToList('${listName}')" class="nav-button">Open List</button>
+                    <button onclick="deleteList('${listName}')" class="nav-button">Delete List</button>`;
+                listContainer.appendChild(card);
+            });
+        }
+
+        function showNewListModal() {
+            const modal = document.getElementById('modal');
+            document.getElementById('modal-title').textContent = 'New List';
+            document.getElementById('modal-input').value = '';
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('modal');
+            modal.classList.remove('active');
+        }
+
+        function createList() {
+            const listName = document.getElementById('modal-input').value;
+            if (listName && !allLists[listName]) {
+                allLists[listName] = { tasks: [], completedTasks: [] }; // Initialize with empty tasks and completedTasks arrays
+                closeModal();
+                saveToLocalStorage();
+                switchToList(listName);
+            } else {
+                alert('List name already exists or is invalid.');
+            }
+        }
+
+        function switchToList(listName) {
+            currentList = listName;
+            const container = document.getElementById('main-container');
+            container.innerHTML = `
+                <button class="back-button" onclick="showAllLists()">Back</button>
+                <h2 id="list-title">${listName}</h2>
+                <form id="todo-form">
+                    <input type="text" id="task-input" placeholder="Add a new task..." required>
+                    <button type="submit">Add</button>
+                </form>
+                <h3>Tasks</h3>
+                <ul id="task-list"></ul>
+                <h3>Completed Tasks</h3>
+                <ul id="completed-task-list"></ul>
+            `;
+            document.getElementById('todo-form').addEventListener('submit', function(event) {
+                event.preventDefault();
+                const taskInput = document.getElementById('task-input');
+                const taskText = taskInput.value;
+                if (taskText.trim() !== '') {
+                    addTask(taskText);
+                    taskInput.value = '';
+                }
+            });
+            renderTasks();
+            renderCompletedTasks();
+        }
+
+        function addTask(taskText) {
+            const taskList = document.getElementById('task-list');
+            const timestamp = new Date().toLocaleString();
+            const taskItem = document.createElement('li');
+            taskItem.innerHTML = `
+                <span>${taskText}</span>
+                <span class="timestamp">${timestamp}</span>
+                <button class="complete-btn" onclick="completeTask(this)">Complete</button>
+                <button class="delete-btn" onclick="deleteTask(this)">Delete</button>
+            `;
+            taskList.appendChild(taskItem);
+
+            allLists[currentList].tasks.push({ taskText, timestamp });
+            saveToLocalStorage();
+        }
+
+        function completeTask(button) {
+            const taskItem = button.parentElement;
+            const taskText = taskItem.querySelector('span').textContent;
+            const timestamp = taskItem.querySelector('.timestamp').textContent;
+            const completionTimestamp = new Date().toLocaleString();
+
+            // Move task to completedTasks array
+            allLists[currentList].tasks = allLists[currentList].tasks.filter(task => task.taskText !== taskText);
+            allLists[currentList].completedTasks.push({ taskText, timestamp, completionTimestamp });
+            saveToLocalStorage();
+            renderTasks();
+            renderCompletedTasks();
+        }
+
+        function deleteTask(button) {
+            const taskItem = button.parentElement;
+            const taskText = taskItem.querySelector('span').textContent;
+
+            // Remove task from current list's tasks
+            allLists[currentList].tasks = allLists[currentList].tasks.filter(task => task.taskText !== taskText);
+            saveToLocalStorage();
+            renderTasks();
+        }
+
+        function deleteList(listName) {
+            if (confirm(`Are you sure you want to delete the list "${listName}"? This action cannot be undone.`)) {
+                delete allLists[listName];
+                saveToLocalStorage();
+                showAllLists();
+            }
+        }
+
+        function saveToLocalStorage() {
+            localStorage.setItem('lists', JSON.stringify(allLists));
+        }
+
+        // Render tasks for the current list
+        function renderTasks() {
+            const taskList = document.getElementById('task-list');
+            taskList.innerHTML = '';
+            allLists[currentList].tasks.forEach(task => {
+                const taskItem = document.createElement('li');
+                taskItem.innerHTML = `
+                    <span>${task.taskText}</span>
+                    <span class="timestamp">${task.timestamp}</span>
+                    <button class="complete-btn" onclick="completeTask(this)">Complete</button>
+                    <button class="delete-btn" onclick="deleteTask(this)">Delete</button>
+                `;
+                taskList.appendChild(taskItem);
+            });
+        }
+
+        // Render completed tasks for the current list
+        function renderCompletedTasks() {
+            const completedTaskList = document.getElementById('completed-task-list');
+            completedTaskList.innerHTML = '';
+            allLists[currentList].completedTasks.forEach(task => {
+                const taskItem = document.createElement('li');
+                taskItem.innerHTML = `
+                    <span class="completed-task">${task.taskText}</span>
+                    <span class="timestamp">Created: ${task.timestamp}</span>
+                    <span class="timestamp">Completed: ${task.completionTimestamp}</span>
+                `;
+                completedTaskList.appendChild(taskItem);
+            });
+        }
+
+        // Initialize by showing all lists
+        showAllLists();
+    </script>
+
+</body>
+</html>

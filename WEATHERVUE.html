@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WeatherVue</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(to right, #8e2de2, #4a00e0);
+            color: #fff;
+        }
+
+        .container {
+            text-align: center;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 800px;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .nav a {
+            color: #fff;
+            text-decoration: none;
+            margin-left: 10px;
+        }
+
+        .search-box {
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            width: 200px;
+            border: none;
+            border-radius: 5px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #2575fc;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: black;
+            color: white;
+        }
+
+        .toggle-button {
+            margin-top: 10px;
+            background-color: #fff;
+            color: #2575fc;
+        }
+
+        .weather-info {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .card img {
+            width: 50px;
+            height: 50px;
+        }
+
+        .date-time {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+
+        .suggestions {
+            margin-top: 20px;
+            font-size: 16px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav">
+            <h1>WeatherVue</h1>
+            <div>
+                <a href="https://www.linkedin.com/in/namita-sharma-88b94130b" target="_blank">
+                    <img src="https://cdn-icons-png.flaticon.com/512/174/174857.png" alt="LinkedIn" style="width: 20px; height: 20px;">
+                </a>&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;
+                <a href="https://github.com/Namita-sharma-7" target="_blank">
+                    <img src="https://cdn-icons-png.flaticon.com/512/25/25231.png" alt="GitHub" style="width: 20px; height: 20px;">
+                </a>
+            </div>
+        </div>
+        <div class="search-box">
+            <input type="text" id="city" placeholder="Enter city name">
+            <button onclick="getWeather()">Get Weather</button>
+        </div>
+        <div class="date-time" id="date-time"></div>
+        <div class="weather-info" id="weather-info">
+            <!-- Weather information will be displayed here -->
+        </div>
+        <button class="toggle-button" onclick="toggleUnits()">Switch to &deg;F</button>
+    </div>
+
+    <script>
+        const api_key = "d706680e9843d24fb09f53e763d3ef9f";
+        let isCelsius = true;
+
+        function toggleUnits() {
+            isCelsius = !isCelsius;
+            const button = document.querySelector('.toggle-button');
+            button.textContent = isCelsius ? 'Switch to \u00B0 F' : 'Switch to \u00B0 C';
+            getWeather();
+        }
+
+        async function getWeather() {
+            const city = document.getElementById('city').value;
+            const units = isCelsius ? 'metric' : 'imperial';
+            const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${api_key}&units=${units}`;
+            const response = await fetch(url);
+            const data = await response.json();
+            if (data.cod === 200) {
+                const { coord } = data;
+                const airQualityData = await getAirQuality(coord.lat, coord.lon);
+                const uvData = await getUVIndex(coord.lat, coord.lon);
+                displayWeather(data, airQualityData, uvData);
+                displaySuggestions(data, airQualityData, uvData);
+            } else {
+                displayError();
+            }
+        }
+
+        async function getAirQuality(lat, lon) {
+            const url = `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${api_key}`;
+            const response = await fetch(url);
+            return await response.json();
+        }
+
+        async function getUVIndex(lat, lon) {
+            const url = `https://api.openweathermap.org/data/2.5/uvi?lat=${lat}&lon=${lon}&appid=${api_key}`;
+            const response = await fetch(url);
+            return await response.json();
+        }
+
+        function displayWeather(data, airQualityData, uvData) {
+            const weatherInfo = document.getElementById('weather-info');
+            const { name, main, weather, wind, sys, visibility } = data;
+            const icon = `http://openweathermap.org/img/wn/${weather[0].icon}.png`;
+            const tempUnit = isCelsius ? '&deg;C' : '&deg;F';
+            const sunrise = new Date(sys.sunrise * 1000).toLocaleTimeString();
+            const sunset = new Date(sys.sunset * 1000).toLocaleTimeString();
+            const date = new Date().toLocaleDateString();
+            const time = new Date().toLocaleTimeString();
+            const airQuality = airQualityData.list[0].main.aqi;
+            const uvIndex = uvData.value;
+
+            weatherInfo.innerHTML = `
+                <div class="card">
+                    <img src="${icon}" alt="${weather[0].description}">
+                    <p>${name}</p>
+                </div>
+                <div class="card">
+                    <img src="https://img.icons8.com/ios-filled/50/ffffff/temperature.png" alt="Temperature">
+                    <p>Temperature: ${main.temp} ${tempUnit}</p>
+                </div>
+                <div class="card">
+                    <img src="https://img.icons8.com/ios-filled/50/ffffff/humidity.png" alt="Humidity">
+                    <p>Humidity: ${main.humidity}%</p>
+                </div>
+                <div class="card">
+                    <img src="https://img.icons8.com/ios-filled/50/ffffff/wind.png" alt="Wind">
+                    <p>Wind: ${wind.speed} ${isCelsius ? 'm/s' : 'mph'}</p>
+                </div>
+                <div class="card">
+                    <img src="https://img.icons8.com/ios-filled/50/ffffff/visible.png" alt="Visibility">
+                    <p>Visibility: ${visibility / 1000} km</p>
+                </div>
+                <div class="card">
+                    <img src="https://img.icons8.com/ios-filled/50/ffffff/sunrise.png" alt="Sunrise">
+                    <p>Sunrise: ${sunrise}</p>
+                </div>
+                <div class="card">
+                    <img src="https://img.icons8.com/ios-filled/50/ffffff/sunset.png" alt="Sunset">
+                    <p>Sunset: ${sunset}</p>
+                </div>
+                <div class="card">
+                    <img src="https://img.icons8.com/ios-filled/50/ffffff/air-quality.png" alt="Air Quality">
+                    <p>Air Quality: ${airQuality}</p>
+                </div>
+                <div class="card">
+                    <img src="https://img.icons8.com/ios-filled/50/ffffff/sun.png" alt="UV Index">
+                    <p>UV Index: ${uvIndex}</p>
+                </div>
+<div class="card" style="width:555px"><h3>Here I Have Suggestions For You !!</h3>
+<span class="suggestions" id="suggestions"></span>
+</div>
+            `;
+            
+            const dateTime = document.getElementById('date-time');
+            dateTime.innerHTML = `Date: ${date} | Time: ${time}`;
+        }
+
+        function displaySuggestions(data, airQualityData, uvData) {
+            const suggestions = document.getElementById('suggestions');
+            const { main, weather } = data;
+            const airQuality = airQualityData.list[0].main.aqi;
+            const uvIndex = uvData.value;
+
+            let suggestionText = '';
+
+            // Clothing Suggestions
+            if (main.temp < 10) {
+                suggestionText += 'It\'s cold outside. Wear a jacket and keep warm.<br>';
+            } else if (main.temp > 30) {
+                suggestionText += 'It\'s hot outside. Wear light clothing and stay hydrated.<br>';
+            }
+
+            // Activity Suggestions
+            if (weather[0].main === 'Rain') {
+                suggestionText += 'It\'s rainy. You might want to stay indoors or take an umbrella.<br>';
+            } else if (weather[0].main === 'Clear') {
+                suggestionText += 'It\'s clear and sunny. Great day for outdoor activities.<br>';
+            }
+
+            // Health Tips
+            if (uvIndex > 7) {
+                suggestionText += 'High UV index. Wear sunscreen and sunglasses.<br>';
+            }
+
+            if (airQuality > 3) {
+                suggestionText += 'Air quality is poor. Consider wearing a mask if you go outside.<br>';
+            }
+
+            suggestions.innerHTML = suggestionText || 'No special suggestions for today.';
+        }
+
+        function displayError() {
+            const weatherInfo = document.getElementById('weather-info');
+            weatherInfo.innerHTML = `<p>City not found. Please try again.</p>`;
+            const suggestions = document.getElementById('suggestions');
+            suggestions.innerHTML = '';
+        }
+    </script>
+</body>
+</html>
